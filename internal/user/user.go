@@ -39,14 +39,12 @@ func (u *User) GetLogin() string {
 
 func (u *User) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
-		Id           uuid.UUID `json:"id"`
-		Login        string    `json:"login"`
-		PasswordHash string    `json:"passwordHash"`
-		Role         string    `json:"role"`
+		Id    uuid.UUID `json:"id"`
+		Login string    `json:"login"`
+		Role  string    `json:"role"`
 	}{
-		Id:           u.id,
-		Login:        u.login,
-		PasswordHash: u.passwordHash,
-		Role:         u.role.GetRole(),
+		Id:    u.id,
+		Login: u.login,
+		Role:  u.role.GetRole(),
 	})
 }
