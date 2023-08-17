@@ -21,6 +21,25 @@ func CreateUser(login string, passwordHash string) *User {
 	}
 }
 
+func MapFromData(id string, login string, passwordHash string, role string) (*User, error) {
+	parse, err := uuid.Parse(id)
+	if err != nil {
+		return nil, err
+	}
+
+	userRole, err := TryFrom(role)
+	if err != nil {
+		return nil, err
+	}
+
+	return &User{
+		id:           parse,
+		login:        login,
+		passwordHash: passwordHash,
+		role:         *userRole,
+	}, nil
+}
+
 func (u *User) GetId() uuid.UUID {
 	return u.id
 }

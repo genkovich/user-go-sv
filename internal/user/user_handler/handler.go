@@ -9,8 +9,12 @@ type Handler struct {
 	Storage user.Storage
 }
 
-func (h *Handler) GetList() []user.User {
-	return h.Storage.GetList()
+func NewHandler(storage user.Storage) *Handler {
+	return &Handler{Storage: storage}
+}
+
+func (h *Handler) GetList(limit int, offset int) ([]user.User, error) {
+	return h.Storage.GetList(limit, offset)
 }
 
 func (h *Handler) Create(createUser CreateUserCommand) uuid.UUID {

@@ -1,7 +1,7 @@
 package user
 
 type Storage interface {
-	GetList() []User
+	GetList(limit int, offset int) ([]User, error)
 	Add(user User)
 	Remove(userId string)
 }

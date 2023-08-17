@@ -1,5 +1,10 @@
 package user
 
+import (
+	"errors"
+	"fmt"
+)
+
 const (
 	roleUser  = "ROLE_USER"
 	roleAdmin = "ROLE_ADMIN"
@@ -7,6 +12,19 @@ const (
 
 type Role struct {
 	role string
+}
+
+func TryFrom(role string) (*Role, error) {
+	allowedRoles := map[string]string{
+		"ROLE_USER":  "ROLE_USER",
+		"ROLE_ADMIN": "ROLE_ADMIN",
+	}
+
+	if value, ok := allowedRoles[role]; !ok {
+		return nil, errors.New(fmt.Sprintf("role %s is not allowed", role))
+	} else {
+		return &Role{role: value}, nil
+	}
 }
 
 func CreateUserRole() *Role {

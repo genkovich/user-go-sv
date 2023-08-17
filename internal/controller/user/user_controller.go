@@ -5,22 +5,20 @@ import (
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 	"net/http"
-	"user-service/internal/persistance/memory"
+	"strconv"
 	"user-service/internal/user/user_handler"
 	"user-service/pkg/response"
 )
 
 type Controller struct {
-	handler user_handler.Handler
+	handler *user_handler.Handler
 	log     *zap.Logger
 }
 
-func NewUserController(log *zap.Logger) *Controller {
+func NewUserController(log *zap.Logger, handler *user_handler.Handler) *Controller {
 	return &Controller{
-		handler: user_handler.Handler{
-			Storage: memory.NewUserMemoryStorage(),
-		},
-		log: log,
+		handler: handler,
+		log:     log,
 	}
 }
 
@@ -31,7 +29,24 @@ func (uc *Controller) RegisterRoutes(r *chi.Mux) {
 }
 
 func (uc *Controller) GetUserList(w http.ResponseWriter, r *http.Request) {
-	users := uc.handler.GetList()
+
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		limit = 10
+	}
+
+	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+	if err != nil {
+		offset = 0
+	}
+
+	users, err := uc.handler.GetList(limit, offset)
+
+	if err != nil {
+		uc.log.Error("getting list error", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	response.Render(w, uc.log, http.StatusOK, users)
 }
