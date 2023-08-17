@@ -10,14 +10,17 @@ import (
 func main() {
 	router := chi.NewRouter()
 	logger, err := zap.NewProduction()
+	if err != nil {
+		panic(err)
+	}
 	logger.Info("Starting server...")
 
 	userController := user.NewUserController(logger)
 	userController.RegisterRoutes(router)
 
-	if err = http.ListenAndServe(":8085", router); err != nil {
+	if err := http.ListenAndServe(":8085", router); err != nil {
 		logger.Fatal("Server can't start", zap.Error(err))
 		return
 	}
-
 }
+
