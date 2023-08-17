@@ -10,6 +10,7 @@ type User struct {
 	login        string
 	passwordHash string
 	role         Role
+	Email        string
 }
 
 func CreateUser(login string, passwordHash string) *User {

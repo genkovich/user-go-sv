@@ -6,6 +6,7 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
+	"user-service/internal/user"
 	"user-service/internal/user/user_handler"
 	"user-service/pkg/response"
 )
@@ -13,6 +14,13 @@ import (
 type Controller struct {
 	handler *user_handler.Handler
 	log     *zap.Logger
+}
+
+type RegisterUserCommand struct {
+	Login           string `json:"login"`
+	Password        string `json:"password"`
+	ConfirmPassword string `json:"confirm_password"`
+	Email           string `json:"email"`
 }
 
 func NewUserController(log *zap.Logger, handler *user_handler.Handler) *Controller {
@@ -26,6 +34,50 @@ func (uc *Controller) RegisterRoutes(r *chi.Mux) {
 	r.Get("/user", uc.GetUserList)
 	r.Post("/user", uc.CreateUser)
 	r.Delete("/user/{userId}", uc.DeleteUser)
+	r.Post("/user/register", uc.RegisterUser)
+}
+
+func (uc *Controller) RegisterUser(w http.ResponseWriter, r *http.Request) {
+	var createUser RegisterUserCommand
+
+	err := json.NewDecoder(r.Body).Decode(&createUser)
+	if err != nil {
+		uc.log.Error("decoding error", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if createUser.Password != createUser.ConfirmPassword {
+		uc.log.Error("passwords do not match")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		limit = 10
+	}
+
+	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
+	if err != nil {
+		offset = 0
+	}
+
+	users, _ := uc.handler.GetList(offset, limit)
+	for _, u := range users {
+		if u.GetLogin() == createUser.Login {
+			uc.log.Error("login already exists")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+	}
+
+	newUser := user.CreateUser(createUser.Login, createUser.Password)
+	newUser.Email = createUser.Email
+
+	uc.handler.Storage.Add(*newUser)
+
+	response.Render(w, uc.log, http.StatusCreated, newUser)
 }
 
 func (uc *Controller) GetUserList(w http.ResponseWriter, r *http.Request) {
