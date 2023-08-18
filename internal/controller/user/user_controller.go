@@ -36,7 +36,7 @@ func (uc *Controller) RegisterRoutes(r *chi.Mux) {
 	r.Get("/user", uc.GetUserList)
 	r.Post("/user", uc.CreateUser)
 	r.Delete("/user/{userId}", uc.DeleteUser)
-	r.Post("/user/register", uc.RegisterUser) // Добавлен маршрут для регистрации пользователей
+	r.Post("/user/register", uc.RegisterUser)
 }
 
 func (uc *Controller) RegisterUser(w http.ResponseWriter, r *http.Request) {
