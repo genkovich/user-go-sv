@@ -23,9 +23,10 @@ func NewUserController(log *zap.Logger, handler *user_handler.Handler) *Controll
 }
 
 func (uc *Controller) RegisterRoutes(r *chi.Mux) {
-	r.Get("/user", uc.GetUserList)
-	r.Post("/user", uc.CreateUser)
-	r.Delete("/user/{userId}", uc.DeleteUser)
+	r.Get("/users", uc.GetUserList)
+	r.Post("/users", uc.CreateUser)
+	r.Delete("/users/{userId}", uc.DeleteUser)
+	r.Post("/users/auth", uc.Authenticate)
 }
 
 func (uc *Controller) GetUserList(w http.ResponseWriter, r *http.Request) {
@@ -77,4 +78,29 @@ func (uc *Controller) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.Render(w, uc.log, http.StatusNoContent, nil)
+}
+
+func (uc *Controller) Authenticate(w http.ResponseWriter, r *http.Request) {
+	var credentials user_handler.AuthenticateCommand
+
+	err := json.NewDecoder(r.Body).Decode(&credentials)
+	if err != nil {
+		uc.log.Error("decoding error", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	token, err := uc.handler.Authenticate(credentials.Login, credentials.Password)
+	if err != nil {
+		uc.log.Error("auth error", zap.Error(err))
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:  "token",
+		Value: token.JwtToken,
+	})
+
+	response.Render(w, uc.log, http.StatusOK, token)
 }

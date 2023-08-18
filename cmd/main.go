@@ -20,7 +20,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	config, err := ReadConfig()
+	config, err := readConfig()
 	if err != nil {
 		logger.Fatal("Cannot read config", zap.Error(err))
 	}
@@ -33,7 +33,7 @@ func main() {
 	router := chi.NewRouter()
 
 	userStorage := psql.NewUserPsqlStorage(db, logger)
-	userHandler := user_handler.NewHandler(userStorage)
+	userHandler := user_handler.NewHandler(userStorage, config.JwtSecret)
 
 	userController := user.NewUserController(logger, userHandler)
 	userController.RegisterRoutes(router)
