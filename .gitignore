@@ -1,2 +1,5 @@
 .idea/
 .env
+
+./docker/.env
+./docker/.db/
