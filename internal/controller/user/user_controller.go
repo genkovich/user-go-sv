@@ -2,13 +2,15 @@ package user
 
 import (
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
-	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"strconv"
 	"user-service/internal/user"
 	"user-service/internal/user/user_handler"
 	"user-service/pkg/response"
+
+	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 )
 
 type Controller struct {
@@ -34,7 +36,7 @@ func (uc *Controller) RegisterRoutes(r *chi.Mux) {
 	r.Get("/user", uc.GetUserList)
 	r.Post("/user", uc.CreateUser)
 	r.Delete("/user/{userId}", uc.DeleteUser)
-	r.Post("/user/register", uc.RegisterUser)
+	r.Post("/user/register", uc.RegisterUser) // Добавлен маршрут для регистрации пользователей
 }
 
 func (uc *Controller) RegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -72,8 +74,16 @@ func (uc *Controller) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	newUser := user.CreateUser(createUser.Login, createUser.Password)
+	hashedPassword, err := hashAndSalt([]byte(createUser.Password))
+	if err != nil {
+		uc.log.Error("password hashing error", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	newUser := user.CreateUser(createUser.Login, "")
 	newUser.Email = createUser.Email
+	newUser.PasswordHash = hashedPassword
 
 	uc.handler.Storage.Add(*newUser)
 
@@ -129,4 +139,12 @@ func (uc *Controller) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.Render(w, uc.log, http.StatusNoContent, nil)
+}
+
+func hashAndSalt(pwd []byte) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
 }

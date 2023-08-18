@@ -8,7 +8,7 @@ import (
 type User struct {
 	id           uuid.UUID
 	login        string
-	passwordHash string
+	PasswordHash string
 	role         Role
 	Email        string
 }
@@ -17,7 +17,7 @@ func CreateUser(login string, passwordHash string) *User {
 	return &User{
 		id:           uuid.New(),
 		login:        login,
-		passwordHash: passwordHash,
+		PasswordHash: passwordHash,
 		role:         *CreateUserRole(),
 	}
 }
@@ -36,7 +36,7 @@ func MapFromData(id string, login string, passwordHash string, role string) (*Us
 	return &User{
 		id:           parse,
 		login:        login,
-		passwordHash: passwordHash,
+		PasswordHash: passwordHash,
 		role:         *userRole,
 	}, nil
 }
