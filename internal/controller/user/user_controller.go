@@ -99,8 +99,16 @@ func (uc *Controller) Authenticate(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &http.Cookie{
 		Name:  "token",
-		Value: token.JwtToken,
+		Value: token.GetJwtToken(),
 	})
 
-	response.Render(w, uc.log, http.StatusOK, token)
+	result := struct {
+		Success bool   `json:"success"`
+		Token   string `json:"token"`
+	}{
+		Success: true,
+		Token:   token.GetJwtToken(),
+	}
+
+	response.Render(w, uc.log, http.StatusOK, result)
 }

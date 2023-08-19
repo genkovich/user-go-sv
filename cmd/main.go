@@ -11,7 +11,9 @@ import (
 	user_storage "user-service/internal/persistance/psql/user"
 	profile_storage "user-service/internal/persistance/psql/user/profile"
 	"user-service/internal/user/profile/profile_handler"
+	"user-service/internal/user/token"
 	"user-service/internal/user/user_handler"
+	"user-service/pkg/cache"
 	"user-service/pkg/database"
 )
 
@@ -33,10 +35,18 @@ func main() {
 		logger.Fatal("Cannot init database", zap.Error(err))
 	}
 
+	cacheProvider, err := cache.NewCache(config.RedisAddr)
+	if err != nil {
+		logger.Fatal("Cannot init cache", zap.Error(err))
+	}
+
+	jwtGenerator := token.NewJwtGenerator(config.JwtSecret)
+	cachedJwtGenerator := token.NewGeneratorCached(jwtGenerator, cacheProvider)
+
 	router := chi.NewRouter()
 
 	userStorage := user_storage.NewUserPsqlStorage(db, logger)
-	userHandler := user_handler.NewHandler(userStorage, config.JwtSecret)
+	userHandler := user_handler.NewHandler(userStorage, cachedJwtGenerator)
 
 	userController := user.NewUserController(userHandler, logger)
 	userController.RegisterRoutes(router)

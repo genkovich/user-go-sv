@@ -12,3 +12,10 @@ services:
       - ./.db/psql:/var/lib/postgresql/data
     ports:
       - ${POSTGRES_PORT}:5432
+
+  redis:
+    image: redis:7.2-bookworm
+    ports:
+      - ${REDIS_PORT}:6379
+    volumes:
+      - ./.db/redis:/data

@@ -1,5 +1,13 @@
 package token
 
 type Token struct {
-	JwtToken string `json:"jwt_token"`
+	jwtToken string
+}
+
+func NewToken(jwtToken string) *Token {
+	return &Token{jwtToken: jwtToken}
+}
+
+func (t *Token) GetJwtToken() string {
+	return t.jwtToken
 }

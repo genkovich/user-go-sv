@@ -8,6 +8,7 @@ import (
 type Config struct {
 	PsqlDSN   string
 	JwtSecret []byte
+	RedisAddr string
 }
 
 func readConfig() (*Config, error) {
@@ -19,10 +20,12 @@ func readConfig() (*Config, error) {
 
 	psqlDsn := os.Getenv("PSQL_DSN")
 	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
+	redisAddr := os.Getenv("REDIS_ADDR")
 
 	return &Config{
 		PsqlDSN:   psqlDsn,
 		JwtSecret: jwtSecret,
+		RedisAddr: redisAddr,
 	}, nil
 
 }
