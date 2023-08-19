@@ -7,7 +7,10 @@ import (
 	"net/http"
 	"os"
 	"user-service/internal/controller/user"
-	"user-service/internal/persistance/psql"
+	"user-service/internal/controller/user/profile"
+	user_storage "user-service/internal/persistance/psql/user"
+	profile_storage "user-service/internal/persistance/psql/user/profile"
+	"user-service/internal/user/profile/profile_handler"
 	"user-service/internal/user/user_handler"
 	"user-service/pkg/database"
 )
@@ -32,11 +35,17 @@ func main() {
 
 	router := chi.NewRouter()
 
-	userStorage := psql.NewUserPsqlStorage(db, logger)
+	userStorage := user_storage.NewUserPsqlStorage(db, logger)
 	userHandler := user_handler.NewHandler(userStorage, config.JwtSecret)
 
-	userController := user.NewUserController(logger, userHandler)
+	userController := user.NewUserController(userHandler, logger)
 	userController.RegisterRoutes(router)
+
+	profileStorage := profile_storage.NewProfilePsqlStorage(db, logger)
+	profileHandler := profile_handler.NewProfileHandler(profileStorage)
+
+	profileController := profile.NewProfileController(profileHandler, logger)
+	profileController.RegisterRoutes(router)
 
 	if err = http.ListenAndServe(":8085", router); err != nil {
 		logger.Fatal("Server can't start", zap.Error(err))

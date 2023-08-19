@@ -15,7 +15,7 @@ type Controller struct {
 	log     *zap.Logger
 }
 
-func NewUserController(log *zap.Logger, handler *user_handler.Handler) *Controller {
+func NewUserController(handler *user_handler.Handler, log *zap.Logger) *Controller {
 	return &Controller{
 		handler: handler,
 		log:     log,

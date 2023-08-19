@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
    id uuid PRIMARY KEY,
    login VARCHAR(255) NOT NULL,
    role VARCHAR(30) NOT NULL,
