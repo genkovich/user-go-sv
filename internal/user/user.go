@@ -24,7 +24,7 @@ func CreateUser(login string, passwordHash string) *User {
 }
 
 func NewUser(login string, hashedPassword string, email string) *User {
-	privateUser := &User{
+	user := &User{
 		id:           uuid.New(),
 		login:        login,
 		passwordHash: hashedPassword,
@@ -32,7 +32,7 @@ func NewUser(login string, hashedPassword string, email string) *User {
 		email:        email,
 	}
 
-	return &User{privateUser: privateUser}
+	return user
 }
 
 func MapFromData(id string, login string, passwordHash string, role string) (*User, error) {
