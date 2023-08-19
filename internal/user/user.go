@@ -8,18 +8,31 @@ import (
 type User struct {
 	id           uuid.UUID
 	login        string
-	PasswordHash string
+	passwordHash string
 	role         Role
-	Email        string
+	email        string
+	privateUser  *User
 }
 
 func CreateUser(login string, passwordHash string) *User {
 	return &User{
 		id:           uuid.New(),
 		login:        login,
-		PasswordHash: passwordHash,
+		passwordHash: passwordHash,
 		role:         *CreateUserRole(),
 	}
+}
+
+func NewUser(login string, hashedPassword string, email string) *User {
+	privateUser := &User{
+		id:           uuid.New(),
+		login:        login,
+		passwordHash: hashedPassword,
+		role:         *CreateUserRole(),
+		email:        email,
+	}
+
+	return &User{privateUser: privateUser}
 }
 
 func MapFromData(id string, login string, passwordHash string, role string) (*User, error) {
@@ -36,7 +49,7 @@ func MapFromData(id string, login string, passwordHash string, role string) (*Us
 	return &User{
 		id:           parse,
 		login:        login,
-		PasswordHash: passwordHash,
+		passwordHash: passwordHash,
 		role:         *userRole,
 	}, nil
 }

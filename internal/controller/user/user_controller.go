@@ -81,9 +81,7 @@ func (uc *Controller) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newUser := user.CreateUser(createUser.Login, "")
-	newUser.Email = createUser.Email
-	newUser.PasswordHash = hashedPassword
+	newUser := user.NewUser(createUser.Login, hashedPassword, createUser.Email)
 
 	uc.handler.Storage.Add(*newUser)
 
