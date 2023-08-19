@@ -2,15 +2,12 @@ package user
 
 import (
 	"encoding/json"
-	"golang.org/x/crypto/bcrypt"
-	"net/http"
-	"strconv"
-	"user-service/internal/user"
-	"user-service/internal/user/user_handler"
-	"user-service/pkg/response"
-
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
+	"net/http"
+	"strconv"
+	"user-service/internal/user/user_handler"
+	"user-service/pkg/response"
 )
 
 type Controller struct {
@@ -18,14 +15,7 @@ type Controller struct {
 	log     *zap.Logger
 }
 
-type RegisterUserCommand struct {
-	Login           string `json:"login"`
-	Password        string `json:"password"`
-	ConfirmPassword string `json:"confirm_password"`
-	Email           string `json:"email"`
-}
-
-func NewUserController(log *zap.Logger, handler *user_handler.Handler) *Controller {
+func NewUserController(handler *user_handler.Handler, log *zap.Logger) *Controller {
 	return &Controller{
 		handler: handler,
 		log:     log,
@@ -33,59 +23,10 @@ func NewUserController(log *zap.Logger, handler *user_handler.Handler) *Controll
 }
 
 func (uc *Controller) RegisterRoutes(r *chi.Mux) {
-	r.Get("/user", uc.GetUserList)
-	r.Post("/user", uc.CreateUser)
-	r.Delete("/user/{userId}", uc.DeleteUser)
-	r.Post("/user/register", uc.RegisterUser)
-}
-
-func (uc *Controller) RegisterUser(w http.ResponseWriter, r *http.Request) {
-	var createUser RegisterUserCommand
-
-	err := json.NewDecoder(r.Body).Decode(&createUser)
-	if err != nil {
-		uc.log.Error("decoding error", zap.Error(err))
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	if createUser.Password != createUser.ConfirmPassword {
-		uc.log.Error("passwords do not match")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
-	if err != nil {
-		limit = 10
-	}
-
-	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
-	if err != nil {
-		offset = 0
-	}
-
-	users, _ := uc.handler.GetList(offset, limit)
-	for _, u := range users {
-		if u.GetLogin() == createUser.Login {
-			uc.log.Error("login already exists")
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-	}
-
-	hashedPassword, err := hashAndSalt([]byte(createUser.Password))
-	if err != nil {
-		uc.log.Error("password hashing error", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	newUser := user.NewUser(createUser.Login, hashedPassword, createUser.Email)
-
-	uc.handler.Storage.Add(*newUser)
-
-	response.Render(w, uc.log, http.StatusCreated, newUser)
+	r.Get("/users", uc.GetUserList)
+	r.Post("/users", uc.CreateUser)
+	r.Delete("/users/{userId}", uc.DeleteUser)
+	r.Post("/users/auth", uc.Authenticate)
 }
 
 func (uc *Controller) GetUserList(w http.ResponseWriter, r *http.Request) {
@@ -139,10 +80,27 @@ func (uc *Controller) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	response.Render(w, uc.log, http.StatusNoContent, nil)
 }
 
-func hashAndSalt(pwd []byte) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
+func (uc *Controller) Authenticate(w http.ResponseWriter, r *http.Request) {
+	var credentials user_handler.AuthenticateCommand
+
+	err := json.NewDecoder(r.Body).Decode(&credentials)
 	if err != nil {
-		return "", err
+		uc.log.Error("decoding error", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
-	return string(hash), nil
+
+	token, err := uc.handler.Authenticate(credentials.Login, credentials.Password)
+	if err != nil {
+		uc.log.Error("auth error", zap.Error(err))
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:  "token",
+		Value: token.JwtToken,
+	})
+
+	response.Render(w, uc.log, http.StatusOK, token)
 }

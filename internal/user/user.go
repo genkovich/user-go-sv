@@ -3,6 +3,7 @@ package user
 import (
 	"encoding/json"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -68,6 +69,15 @@ func (u *User) GetRole() Role {
 
 func (u *User) GetLogin() string {
 	return u.login
+}
+
+func (u *User) IsCorrectPassword(password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(u.passwordHash), []byte(password))
+	if err != nil {
+		return false
+	}
+
+	return true
 }
 
 func (u *User) MarshalJSON() ([]byte, error) {

@@ -6,10 +6,11 @@ import (
 )
 
 type Config struct {
-	PsqlDSN string
+	PsqlDSN   string
+	JwtSecret []byte
 }
 
-func ReadConfig() (*Config, error) {
+func readConfig() (*Config, error) {
 	err := godotenv.Load()
 
 	if err != nil {
@@ -17,7 +18,11 @@ func ReadConfig() (*Config, error) {
 	}
 
 	psqlDsn := os.Getenv("PSQL_DSN")
+	jwtSecret := []byte(os.Getenv("JWT_SECRET"))
 
-	return &Config{PsqlDSN: psqlDsn}, nil
+	return &Config{
+		PsqlDSN:   psqlDsn,
+		JwtSecret: jwtSecret,
+	}, nil
 
 }

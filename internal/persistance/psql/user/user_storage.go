@@ -1,4 +1,4 @@
-package psql
+package user
 
 import (
 	"context"
@@ -66,5 +66,26 @@ func (s *Storage) Add(user user.User) {
 }
 
 func (s *Storage) Remove(userId string) {
+
+}
+
+func (s *Storage) GetByLogin(login string) (*user.User, error) {
+	var u userFields
+
+	err := s.connection.QueryRow(context.Background(), "SELECT * FROM users WHERE login = $1", login).
+		Scan(&u.Id, &u.Login, &u.Role, &u.PasswordHash, &u.CreatedAt, &u.UpdatedAt)
+
+	if err != nil {
+		s.logger.Error("failed to scan row", zap.Error(err))
+		return nil, err
+	}
+
+	tempUser, err := user.MapFromData(u.Id, u.Login, u.PasswordHash, u.Role)
+	if err != nil {
+		s.logger.Error("failed mapping users", zap.Error(err))
+		return nil, err
+	}
+
+	return tempUser, nil
 
 }
