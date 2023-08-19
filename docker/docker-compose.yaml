@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+
+  db:
+    image: postgres:15-bullseye
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./.db/psql:/var/lib/postgresql/data
+    ports:
+      - ${POSTGRES_PORT}:5432
