@@ -7,8 +7,8 @@ type Storage struct {
 }
 
 func NewUserMemoryStorage() *Storage {
-	testUser := user.CreateUser("test", "password")
-	secondUser := user.CreateUser("second", "password")
+	testUser, _ := user.CreateUser("test", "password")
+	secondUser, _ := user.CreateUser("second", "password")
 
 	return &Storage{
 		users: map[string]user.User{

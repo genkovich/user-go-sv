@@ -105,6 +105,10 @@ func (p *Profile) GetPhone() string {
 }
 
 func MapFromData(profileID uuid.UUID, firstName string, lastName string, dob time.Time, email string, phone string) (*Profile, error) {
+	if (profileID == uuid.UUID{}) {
+		return nil, fmt.Errorf("invalid data")
+	}
+
 	mappedProfile, err := NewProfile(firstName, lastName, dob.Format("2006-01-02"), email, phone)
 	if err != nil {
 		return nil, err

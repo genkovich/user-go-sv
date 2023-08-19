@@ -1,7 +1,6 @@
 package user
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -21,7 +20,7 @@ func TryFrom(role string) (*Role, error) {
 	}
 
 	if value, ok := allowedRoles[role]; !ok {
-		return nil, errors.New(fmt.Sprintf("role %s is not allowed", role))
+		return nil, fmt.Errorf("role %s is not allowed", role)
 	} else {
 		return &Role{role: value}, nil
 	}

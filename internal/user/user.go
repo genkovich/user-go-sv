@@ -2,6 +2,7 @@ package user
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -13,16 +14,23 @@ type User struct {
 	role         Role
 }
 
-func CreateUser(login string, passwordHash string) *User {
+func CreateUser(login string, passwordHash string) (*User, error) {
+	if login == "" || passwordHash == "" {
+		return nil, fmt.Errorf("invalid data")
+	}
+
 	return &User{
 		id:           uuid.New(),
 		login:        login,
 		passwordHash: passwordHash,
 		role:         *CreateUserRole(),
-	}
+	}, nil
 }
 
 func MapFromData(id string, login string, passwordHash string, role string) (*User, error) {
+	if id == "" || login == "" || passwordHash == "" || role == "" {
+		return nil, fmt.Errorf("invalid data")
+	}
 	parse, err := uuid.Parse(id)
 	if err != nil {
 		return nil, err

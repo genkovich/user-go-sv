@@ -13,6 +13,7 @@ require (
 )
 
 require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
@@ -22,6 +23,9 @@ require (
 	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/mediocregopher/radix/v3 v3.8.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
+	github.com/stretchr/testify v1.8.4 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
@@ -29,4 +33,5 @@ require (
 	golang.org/x/sys v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

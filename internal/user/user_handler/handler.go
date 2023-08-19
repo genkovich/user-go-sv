@@ -23,11 +23,16 @@ func (h *Handler) GetList(limit int, offset int) ([]user.User, error) {
 	return h.storage.GetList(limit, offset)
 }
 
-func (h *Handler) Create(createUser CreateUserCommand) uuid.UUID {
-	userEntity := *user.CreateUser(createUser.Login, createUser.Password)
-	h.storage.Add(userEntity)
+func (h *Handler) Create(createUser CreateUserCommand) (uuid.UUID, error) {
+	userEntity, err := user.CreateUser(createUser.Login, createUser.Password)
 
-	return userEntity.GetId()
+	if err != nil {
+		return uuid.UUID{}, err
+	}
+
+	h.storage.Add(*userEntity)
+
+	return userEntity.GetId(), nil
 }
 
 func (h *Handler) Delete(userId string) error {

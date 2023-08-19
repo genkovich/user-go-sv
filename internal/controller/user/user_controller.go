@@ -62,7 +62,12 @@ func (uc *Controller) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	uuid := uc.handler.Create(createUser)
+	uuid, err := uc.handler.Create(createUser)
+	if err != nil {
+		uc.log.Error("creating error", zap.Error(err))
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
 
 	response.Render(w, uc.log, http.StatusCreated, uuid)
 }
