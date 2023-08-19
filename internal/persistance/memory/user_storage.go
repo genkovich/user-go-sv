@@ -1,6 +1,8 @@
 package memory
 
-import "user-service/internal/user"
+import (
+	"user-service/internal/user"
+)
 
 type Storage struct {
 	users map[string]user.User

@@ -71,6 +71,10 @@ func (u *User) GetLogin() string {
 	return u.login
 }
 
+func (u *User) GetHashPassword() string {
+	return u.passwordHash
+}
+
 func (u *User) IsCorrectPassword(password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(u.passwordHash), []byte(password))
 	if err != nil {
