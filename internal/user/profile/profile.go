@@ -84,24 +84,24 @@ func (p *Profile) GetId() uuid.UUID {
 	return p.id
 }
 
-func (p *Profile) GetFirstName() string {
-	return p.firstName.String()
+func (p *Profile) GetFirstName() field.FirstName {
+	return p.firstName
 }
 
-func (p *Profile) GetLastName() string {
-	return p.lastName.String()
+func (p *Profile) GetLastName() field.LastName {
+	return p.lastName
 }
 
 func (p *Profile) GetDob() time.Time {
 	return p.dob
 }
 
-func (p *Profile) GetEmail() string {
-	return p.email.String()
+func (p *Profile) GetEmail() field.Email {
+	return p.email
 }
 
-func (p *Profile) GetPhone() string {
-	return p.phone.String()
+func (p *Profile) GetPhone() field.Phone {
+	return p.phone
 }
 
 func MapFromData(profileID uuid.UUID, firstName string, lastName string, dob time.Time, email string, phone string) (*Profile, error) {
@@ -125,18 +125,18 @@ func (p *Profile) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(&struct {
-		Id        uuid.UUID  `json:"id"`
-		FirstName string     `json:"first_name,omitempty"`
-		LastName  string     `json:"last_name,omitempty"`
-		Dob       *time.Time `json:"dob,omitempty"`
-		Email     string     `json:"email,omitempty"`
-		Phone     string     `json:"phone,omitempty"`
+		Id        uuid.UUID       `json:"id"`
+		FirstName field.FirstName `json:"first_name,omitempty"`
+		LastName  field.LastName  `json:"last_name,omitempty"`
+		Dob       *time.Time      `json:"dob,omitempty"`
+		Email     field.Email     `json:"email,omitempty"`
+		Phone     field.Phone     `json:"phone,omitempty"`
 	}{
 		Id:        p.id,
-		FirstName: p.firstName.String(),
-		LastName:  p.lastName.String(),
+		FirstName: p.firstName,
+		LastName:  p.lastName,
 		Dob:       dob,
-		Email:     p.email.String(),
-		Phone:     p.phone.String(),
+		Email:     p.email,
+		Phone:     p.phone,
 	})
 }
