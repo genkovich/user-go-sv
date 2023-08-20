@@ -61,15 +61,25 @@ func (s *Storage) GetList(limit int, offset int) ([]user.User, error) {
 
 }
 
-func (s *Storage) Add(user user.User) {
+func (s *Storage) Add(user user.User) ([]user.User, error) {
+	roleStr := user.GetRole().String()
+
 	_, err := s.connection.Exec(context.Background(),
 		"INSERT INTO users (id, login, password_hash, role, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)",
-		user.GetId(), user.GetLogin(), user.GetHashPassword(), user.GetRole(), time.Now(), time.Now())
+		user.GetId(), user.GetLogin(), user.GetHashPassword(), roleStr, time.Now(), time.Now())
 
 	if err != nil {
 		s.logger.Error("failed to insert user into the database", zap.Error(err))
+		return nil, err
 	}
 
+	userList, err := s.GetList(10, 0)
+	if err != nil {
+		s.logger.Error("failed to fetch updated user list", zap.Error(err))
+		return nil, err
+	}
+
+	return userList, nil
 }
 
 func (s *Storage) Remove(userId string) {

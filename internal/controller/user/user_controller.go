@@ -57,7 +57,7 @@ func (uc *Controller) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
 	if err != nil {
-		limit = 10
+		limit = 0
 	}
 
 	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
@@ -83,8 +83,14 @@ func (uc *Controller) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	newUser := user.NewUser(createUser.Login, hashedPassword, createUser.Email)
 
-	uc.handler.Storage.Add(*newUser)
+	_, err = uc.handler.Storage.Add(*newUser)
+	if err != nil {
+		uc.log.Error("Error adding new user to the database", zap.Error(err))
+		response.Render(w, uc.log, http.StatusInternalServerError, nil)
+		return
+	}
 
+	uc.log.Info("New user added to the database", zap.String("Login", newUser.GetLogin()))
 	response.Render(w, uc.log, http.StatusCreated, newUser)
 }
 
