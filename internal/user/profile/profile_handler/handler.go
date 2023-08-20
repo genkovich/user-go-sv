@@ -32,7 +32,7 @@ func (h *Handler) UpdateProfile(updateProfile UpdateProfileCommand) error {
 		return err
 	}
 
-	err = h.Storage.Upsert(uuid.MustParse(updateProfile.UserId), profileEntity)
+	err = h.Storage.Upsert(updateProfile.UserId, profileEntity)
 
 	if err != nil {
 		return err

@@ -30,8 +30,15 @@ func NewProfileController(handler *profile_handler.Handler, log *zap.Logger) *Co
 
 func (uc *Controller) GetUserProfile(w http.ResponseWriter, r *http.Request) {
 	userId := chi.URLParam(r, "userId")
+	userUuid, err := uuid.Parse(userId)
 
-	profile, err := uc.handler.GetProfile(uuid.MustParse(userId))
+	if err != nil {
+		uc.log.Error("failed parse uuid", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	profile, err := uc.handler.GetProfile(userUuid)
 
 	if err != nil {
 		uc.log.Error("failed get profile", zap.Error(err))
@@ -44,17 +51,24 @@ func (uc *Controller) GetUserProfile(w http.ResponseWriter, r *http.Request) {
 
 func (uc *Controller) UpdateUserProfile(w http.ResponseWriter, r *http.Request) {
 	userId := chi.URLParam(r, "userId")
+	userUuid, err := uuid.Parse(userId)
+
+	if err != nil {
+		uc.log.Error("failed parse uuid", zap.Error(err))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	var updateProfile profile_handler.UpdateProfileCommand
 
-	err := json.NewDecoder(r.Body).Decode(&updateProfile)
+	err = json.NewDecoder(r.Body).Decode(&updateProfile)
 	if err != nil {
 		uc.log.Error("decoding error", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	updateProfile.UserId = userId
+	updateProfile.UserId = userUuid
 	validate := validator.New()
 	err = validate.Struct(updateProfile)
 	if err != nil {

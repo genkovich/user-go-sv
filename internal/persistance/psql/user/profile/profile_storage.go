@@ -51,8 +51,13 @@ func (s *Storage) GetByUserId(userId uuid.UUID) (*profile.Profile, error) {
 		}
 	}
 
-	profileEntity, err := profile.MapFromData(uuid.MustParse(p.Id), p.FirstName, p.LastName, p.DOB, p.Email, p.Phone)
+	profileUUID, err := uuid.Parse(p.Id)
+	if err != nil {
+		s.logger.Error("failed parse uuid", zap.Error(err))
+		return nil, err
+	}
 
+	profileEntity, err := profile.MapFromData(profileUUID, p.FirstName, p.LastName, p.DOB, p.Email, p.Phone)
 	if err != nil {
 		s.logger.Error("failed mapping profile", zap.Error(err))
 		return nil, err
