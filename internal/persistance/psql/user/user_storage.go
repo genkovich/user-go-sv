@@ -2,8 +2,10 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 	"time"
 	"user-service/internal/user"
 	"user-service/pkg/database"
@@ -105,4 +107,53 @@ func (s *Storage) GetByLogin(login string) (*user.User, error) {
 
 	return tempUser, nil
 
+}
+
+func (s *Storage) UpdatePassword(userId string, newPassword string) error {
+	hashedPassword, err := s.hashAndSalt([]byte(newPassword))
+	if err != nil {
+		s.logger.Error("password hashing error", zap.Error(err))
+		return err
+	}
+
+	_, err = s.connection.Exec(context.Background(),
+		"UPDATE users SET password_hash = $1 WHERE id = $2",
+		hashedPassword, userId)
+
+	if err != nil {
+		s.logger.Error("failed to update password in the database", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+func (s *Storage) UpdateUserRole(userId string, newRole string) error {
+	allowedRoles := map[string]string{
+		"ROLE_USER":  "ROLE_USER",
+		"ROLE_ADMIN": "ROLE_ADMIN",
+	}
+
+	if _, ok := allowedRoles[newRole]; !ok {
+		return fmt.Errorf("invalid role: %s", newRole)
+	}
+
+	_, err := s.connection.Exec(context.Background(),
+		"UPDATE users SET role = $1 WHERE id = $2",
+		newRole, userId)
+
+	if err != nil {
+		s.logger.Error("failed to update role in the database", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+func (s *Storage) hashAndSalt(pwd []byte) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
 }

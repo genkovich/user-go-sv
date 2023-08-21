@@ -5,4 +5,6 @@ type Storage interface {
 	Add(user User) ([]User, error)
 	Remove(userId string)
 	GetByLogin(login string) (*User, error)
+	UpdatePassword(userId string, newPassword string) error
+	UpdateUserRole(userId string, newRole string) error
 }

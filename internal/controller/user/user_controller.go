@@ -2,7 +2,9 @@ package user
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/go-chi/chi/v5"
+	"github.com/golang-jwt/jwt/v5"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
@@ -37,6 +39,8 @@ func (uc *Controller) RegisterRoutes(r *chi.Mux) {
 	r.Delete("/users/{userId}", uc.DeleteUser)
 	r.Post("/users/auth", uc.Authenticate)
 	r.Post("/users/register", uc.RegisterUser)
+	r.Post("/users/change-password", uc.ChangeUserPassword)
+	r.Post("/change-role", uc.ChangeUserRole)
 }
 
 func (uc *Controller) RegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -168,6 +172,100 @@ func (uc *Controller) Authenticate(w http.ResponseWriter, r *http.Request) {
 	})
 
 	response.Render(w, uc.log, http.StatusOK, token)
+}
+
+func (uc *Controller) ChangeUserPassword(w http.ResponseWriter, r *http.Request) {
+	var changePasswordCommand struct {
+		UserId      string `json:"user_id"`
+		NewPassword string `json:"new_password"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&changePasswordCommand)
+	if err != nil {
+		response.Render(w, uc.log, http.StatusBadRequest, nil)
+		return
+	}
+
+	targetUser, err := uc.handler.Storage.GetByLogin(changePasswordCommand.UserId)
+	if err != nil {
+		response.Render(w, uc.log, http.StatusNotFound, nil)
+		return
+	}
+
+	err = uc.handler.Storage.UpdatePassword(targetUser.GetId().String(), changePasswordCommand.NewPassword)
+	if err != nil {
+		response.Render(w, uc.log, http.StatusInternalServerError, nil)
+		return
+	}
+
+	response.Render(w, uc.log, http.StatusOK, nil)
+}
+
+func (uc *Controller) ChangeUserRole(w http.ResponseWriter, r *http.Request) {
+
+	var changeRoleCommand struct {
+		UserId  string `json:"user_id"`
+		NewRole string `json:"new_role"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&changeRoleCommand)
+	if err != nil {
+		uc.log.Error("decoding error", zap.Error(err))
+		response.Render(w, uc.log, http.StatusBadRequest, nil)
+		return
+	}
+
+	claims, err := parseJWT(r)
+	if err != nil {
+		uc.log.Error("authentication error", zap.Error(err))
+		response.Render(w, uc.log, http.StatusUnauthorized, nil)
+		return
+	}
+
+	userRole, ok := claims["role"].(string)
+	if !ok || userRole != "ROLE_ADMIN" {
+		uc.log.Warn("unauthorized access", zap.String("user_role", userRole))
+		response.Render(w, uc.log, http.StatusForbidden, nil)
+		return
+	}
+
+	targetUser, err := uc.handler.Storage.GetByLogin(changeRoleCommand.UserId)
+	if err != nil {
+		response.Render(w, uc.log, http.StatusNotFound, nil)
+		return
+	}
+
+	err = uc.handler.Storage.UpdateUserRole(targetUser.GetId().String(), changeRoleCommand.NewRole)
+	if err != nil {
+		response.Render(w, uc.log, http.StatusInternalServerError, nil)
+		return
+	}
+
+	response.Render(w, uc.log, http.StatusOK, nil)
+}
+
+func parseJWT(r *http.Request) (jwt.MapClaims, error) {
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		if err == http.ErrNoCookie {
+			return nil, errors.New("token not found")
+		}
+		return nil, err
+	}
+
+	tokenString := cookie.Value
+
+	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
+	if err != nil {
+		return nil, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	return claims, nil
 }
 
 func hashAndSalt(pwd []byte) (string, error) {
