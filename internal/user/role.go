@@ -41,3 +41,15 @@ func (r *Role) CreateAdminRole() *Role {
 func (r *Role) GetRole() string {
 	return r.role
 }
+
+func (r Role) String() string {
+	return r.role
+}
+
+func RoleFromString(roleStr string) (Role, error) {
+	role, err := TryFrom(roleStr)
+	if err != nil {
+		return Role{}, err
+	}
+	return *role, nil
+}

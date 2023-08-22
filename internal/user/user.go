@@ -12,6 +12,8 @@ type User struct {
 	login        string
 	passwordHash string
 	role         Role
+	email        string
+	privateUser  *User
 }
 
 func CreateUser(login string, passwordHash string) (*User, error) {
@@ -25,6 +27,18 @@ func CreateUser(login string, passwordHash string) (*User, error) {
 		passwordHash: passwordHash,
 		role:         *CreateUserRole(),
 	}, nil
+}
+
+func NewUser(login string, hashedPassword string, email string) *User {
+	user := &User{
+		id:           uuid.New(),
+		login:        login,
+		passwordHash: hashedPassword,
+		role:         *CreateUserRole(),
+		email:        email,
+	}
+
+	return user
 }
 
 func MapFromData(id string, login string, passwordHash string, role string) (*User, error) {
@@ -63,6 +77,10 @@ func (u *User) GetRole() Role {
 
 func (u *User) GetLogin() string {
 	return u.login
+}
+
+func (u *User) GetHashPassword() string {
+	return u.passwordHash
 }
 
 func (u *User) IsCorrectPassword(password string) bool {

@@ -1,6 +1,8 @@
 package memory
 
-import "user-service/internal/user"
+import (
+	"user-service/internal/user"
+)
 
 type Storage struct {
 	users map[string]user.User
@@ -34,4 +36,13 @@ func (ms *Storage) Add(user user.User) {
 
 func (ms *Storage) Remove(userId string) {
 	delete(ms.users, userId)
+}
+
+func (ms *Storage) ExistsByLogin(login string) bool {
+	for _, userEntity := range ms.users {
+		if userEntity.GetLogin() == login {
+			return true
+		}
+	}
+	return false
 }
